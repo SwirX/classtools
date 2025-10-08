@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outils de Classe - IA103</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="tools.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1>Outils de Classe IA103</h1>
+                <div class="subtitle">Outils pédagogiques pour enseignants</div>
+            </div>
+        </header>
+
+        <!-- Navigation Menu -->
+        <nav class="nav-buttons" id="toolsMenu">
+            <!-- navigate to root index -->
+            <button class="nav-btn" onclick="window.location.href='/IA103'">
+                <i class="fas fa-home"></i>
+                Accueil
+            </button>
+            <button class="nav-btn active" data-page="selector"><i class="fas fa-random"></i> Sélecteur</button>
+            <button class="nav-btn" data-page="timer"><i class="fas fa-stopwatch"></i>Minuteur</button>
+            <button class="nav-btn" data-page="groups"><i class="fas fa-users"></i>Groupes</button>
+            <button class="nav-btn" data-page="help"><i class="fas fa-question"></i>Aide</button>
+        </nav>
+
+        <!-- Selector Page -->
+        <div class="page-content active" id="selectorPage">
+            <div class="main-content">
+                <div class="card">
+                    <div class="card-title">Affichage de la Sélection</div>
+                    
+                    <div class="selection-display">
+                        <div id="selectionArea">
+                            <div class="placeholder-text">Cliquez sur "Sélectionner" pour commencer</div>
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <div class="control-group">
+                            <div class="control-label">Mode de Sélection</div>
+                            <div class="mode-buttons">
+                                <button class="mode-btn active" data-mode="normal">Normal</button>
+                                <button class="mode-btn" data-mode="elimination">Élimination</button>
+                                <button class="mode-btn" data-mode="fair">Équitable</button>
+                                <button class="mode-btn" data-mode="weighted">Pondéré</button>
+                            </div>
+                        </div>
+
+                        <div class="toggle-row">
+                            <div class="toggle-switch" id="animationToggle">
+                                <div class="switch active">
+                                    <div class="switch-slider"></div>
+                                </div>
+                                <span class="control-label">Animation</span>
+                            </div>
+
+                            <div class="toggle-switch" id="soundToggle">
+                                <div class="switch active">
+                                    <div class="switch-slider"></div>
+                                </div>
+                                <span class="control-label">Son</span>
+                            </div>
+                        </div>
+
+                        <button class="select-btn" id="selectButton">
+                            <span>Sélectionner un Étudiant</span>
+                        </button>
+
+                        <div class="action-buttons">
+                            <button class="action-btn" id="resetBtn"><i class="fas fa-repeat"></i> Réinitialiser</button>
+                            <button class="action-btn" id="undoBtn"><i class="fas fa-x"></i> Annuler</button>
+                        </div>
+                    </div>
+
+                    <div class="history-section">
+                        <div class="control-label"><i class="fas fa-history"></i> Sélections Récentes</div>
+                        <div class="history-list" id="historyList">
+                            <span class="history-item">Aucune sélection</span>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalSelections">0</div>
+                            <div class="stat-label">Sélections</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="availableCount">14</div>
+                            <div class="stat-label">Disponibles</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-users"></i>Liste des Étudiants</div>
+                    <div class="student-list" id="studentList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer Page -->
+        <div class="page-content" id="timerPage">
+            <div class="card timer-card">
+                <div class="card-title"><i class="fas fa-stopwatch"></i>Minuteur de Classe</div>
+
+                <div class="timer-main">
+                    <div class="timer-display" id="timerDisplay">00:00</div>
+                    <div class="timer-progress">
+                        <div class="progress-fill" id="timerProgress"></div>
+                    </div>
+                </div>
+
+                <div class="timer-presets">
+                    <button class="preset-btn" data-minutes="5">5 min</button>
+                    <button class="preset-btn" data-minutes="10">10 min</button>
+                    <button class="preset-btn" data-minutes="15">15 min</button>
+                    <button class="preset-btn" data-minutes="20">20 min</button>
+                    <button class="preset-btn" data-minutes="30">30 min</button>
+                </div>
+
+                <div class="timer-custom">
+                    <input type="number" id="customMinutes" placeholder="Minutes personnalisées" min="1" max="999">
+                    <button class="action-btn" id="setCustomTimer">Définir</button>
+                </div>
+
+                <div class="timer-controls">
+                    <button class="timer-btn start" id="startTimer">Démarrer</button>
+                    <button class="timer-btn pause" id="pauseTimer">Pause</button>
+                    <button class="timer-btn reset" id="resetTimer">Réinitialiser</button>
+                </div>
+
+                <div class="timer-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="timerSound" checked>
+                        <span>Alarme sonore à la fin</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Groups Page -->
+        <div class="page-content" id="groupsPage">
+            <div class="card groups-card">
+                <div class="card-title"><i class="fas fa-users"></i>Générateur de Groupes</div>
+
+                <div class="groups-options">
+                    <div class="option-group">
+                        <label class="control-label">Nombre de groupes</label>
+                        <input type="number" id="numGroups" min="1" max="14" placeholder="Ex: 3">
+                    </div>
+
+                    <div class="option-divider">OU</div>
+
+                    <div class="option-group">
+                        <label class="control-label">Étudiants par groupe</label>
+                        <input type="number" id="studentsPerGroup" min="1" max="14" placeholder="Ex: 4">
+                    </div>
+                </div>
+
+                <div class="groups-actions">
+                    <button class="select-btn" id="generateGroups">Générer les Groupes</button>
+                    <button class="action-btn" id="regenerateGroups" style="display: none;"><i class="fas fa-shuffle"></i> Mélanger à nouveau</button>
+                </div>
+
+                <div id="groupsResult" class="groups-result"></div>
+
+                <div class="groups-stats" id="groupsStats" style="display: none;">
+                    <div class="stat-item">
+                        <span class="stat-label">Groupes créés:</span>
+                        <span class="stat-value" id="groupsCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Étudiants par groupe:</span>
+                        <span class="stat-value" id="studentsPerGroupCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Page -->
+        <div class="page-content" id="helpPage">
+            <div class="card help-card">
+                <div class="card-title">Guide d'Utilisation</div>
+                
+                <div class="help-content">
+                    <section class="help-section">
+                        <h2>Sélecteur d'Étudiants</h2>
+                        
+                        <div class="help-item">
+                            <h3>Mode Normal</h3>
+                            <p>Sélectionne aléatoirement un étudiant en évitant les 5 dernières sélections. Idéal pour l'usage quotidien.</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Mode Élimination</h3>
+                            <p>Retire chaque étudiant sélectionné du pool jusqu'à ce que tous aient participé. Parfait pour les présentations.</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Mode Équitable</h3>
+                            <p>Priorise les étudiants les moins sélectionnés. Assure une participation équilibrée.</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Mode Pondéré</h3>
+                            <p>Probabilité plus élevée pour les étudiants moins sélectionnés. Compromis entre aléatoire et équité.</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Bloquer/Débloquer</h3>
+                            <p>Exclut temporairement un étudiant (utile pour les absences).</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Raccourci</h3>
+                            <p>Appuyez sur <kbd>Espace</kbd> pour lancer une sélection rapide.</p>
+                        </div>
+                    </section>
+
+                    <section class="help-section">
+                        <h2>Minuteur</h2>
+                        
+                        <div class="help-item">
+                            <h3>Utilisation Rapide</h3>
+                            <p>Cliquez sur un bouton prédéfini (5, 10, 15, 20, 30 min) ou entrez une durée personnalisée.</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Contrôles</h3>
+                            <p><strong>Démarrer:</strong> Lance le compte à rebours<br>
+                            <strong>Pause:</strong> Met le minuteur en pause<br>
+                            <strong>Réinitialiser:</strong> Revient à la durée initiale</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Alarme</h3>
+                            <p>L'alarme sonore se déclenche automatiquement à la fin si activée.</p>
+                        </div>
+                    </section>
+
+                    <section class="help-section">
+                        <h2>Générateur de Groupes</h2>
+                        
+                        <div class="help-item">
+                            <h3>Par Nombre de Groupes</h3>
+                            <p>Entrez combien de groupes créer. Les étudiants seront répartis équitablement.</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Par Taille de Groupe</h3>
+                            <p>Entrez combien d'étudiants par groupe. Le nombre de groupes sera calculé automatiquement.</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Mélanger</h3>
+                            <p>Cliquez sur "Mélanger à nouveau" pour créer de nouvelles combinaisons avec les mêmes paramètres.</p>
+                        </div>
+                    </section>
+
+                    <section class="help-section">
+                        <h2>Conseils Pédagogiques</h2>
+                        
+                        <div class="help-item">
+                            <h3>Questions Rapides</h3>
+                            <p>Mode Normal + Animation désactivée = Sélection instantanée</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Présentations</h3>
+                            <p>Mode Élimination garantit que chaque étudiant présente une fois</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Travaux de Groupe</h3>
+                            <p>Utilisez le générateur pour créer des équipes aléatoires équilibrées</p>
+                        </div>
+
+                        <div class="help-item">
+                            <h3>Gestion du Temps</h3>
+                            <p>Le minuteur aide à maintenir le rythme des activités en classe</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Made with ❤️ by <a href="https://alibks.vercel.app" target="_blank" rel="noopener">Ali Bouyakhsass</a> | 
+            <a href="https://github.com/SwirX/IA103" target="_blank" rel="noopener">GitHub: IA103</a>
+        </div>
+    </div>
+
+    <script src="tools.js"></script>
+</body>
+</html>
