@@ -3,7 +3,7 @@ const students = [
     "Imane", "Youssef", "Mohamed", "Ali", "Deyae",
     "Youssef-FK", "Salma", "Yasmin", "Hanane",
     "Meryem", "Maryam", "Fatimzahra", "Wafaa", "Ayoub",
-    "Samah", "Majda"
+    "Samah", "Saifdine", "Hamza", "Barbra", "Msanide" 
 ];
 
 let currentMode = 'normal';
