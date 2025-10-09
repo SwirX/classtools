@@ -9,6 +9,10 @@ let students = [
 let profiles = {};
 let lastProfileName = null;
 
+let sessionActive = false;
+let sessionScores = {};
+let currentSelected = null;
+
 let currentMode = 'normal';
 let animationEnabled = true;
 let soundEnabled = true;
@@ -55,6 +59,25 @@ function init() {
     const importConfirmBtn = document.getElementById('importConfirmBtn');
     if (importCancelBtn) importCancelBtn.addEventListener('click', hideImportModal);
     if (importConfirmBtn) importConfirmBtn.addEventListener('click', handleImportConfirm);
+
+    // Session buttons
+    const startBtn = document.getElementById('startSessionBtn');
+    const endBtn = document.getElementById('endSessionBtn');
+    const correctBtn = document.getElementById('markCorrectBtn');
+    const wrongBtn = document.getElementById('markWrongBtn');
+    if (startBtn) startBtn.addEventListener('click', startSession);
+    if (endBtn) endBtn.addEventListener('click', endSession);
+    if (correctBtn) correctBtn.addEventListener('click', markCorrect);
+    if (wrongBtn) wrongBtn.addEventListener('click', markWrong);
+
+    // Podium modal buttons
+    const podiumClose = document.getElementById('podiumCloseBtn');
+    const podiumNew = document.getElementById('podiumNewSessionBtn');
+    if (podiumClose) podiumClose.addEventListener('click', hidePodiumModal);
+    if (podiumNew) podiumNew.addEventListener('click', () => {
+        hidePodiumModal();
+        startSession();
+    });
 }
 
 
@@ -239,7 +262,16 @@ function renderStudentList() {
     listEl.innerHTML = '';
     listEl2.innerHTML = '';
 
-    students.forEach(student => {
+    const displayStudents = [...students];
+    displayStudents.sort((a, b) => {
+        const sa = sessionScores[a] || { points: 0, wrong: 0 };
+        const sb = sessionScores[b] || { points: 0, wrong: 0 };
+        if (sa.points !== sb.points) return sb.points - sa.points; // higher points first
+        if (sa.wrong !== sb.wrong) return sa.wrong - sb.wrong; // fewer mistakes first
+        return a.localeCompare(b, 'fr'); // fallback alphabetical
+    });
+
+    displayStudents.forEach(student => {
         const item1 = document.createElement('div');
         item1.className = 'student-item';
 
@@ -253,14 +285,23 @@ function renderStudentList() {
 
         const nameEl1 = document.createElement('span');
         nameEl1.className = 'student-name';
+        const sc = sessionScores[student] || { points: 0, correct: 0, wrong: 0 };
         nameEl1.textContent = `${student} (${studentSelectionCount[student] || 0})`;
 
+        const metaEl1 = document.createElement('span');
+        metaEl1.className = 'student-meta';
+        metaEl1.style.marginLeft = '8px';
+        metaEl1.style.color = '#667';
+        metaEl1.style.fontSize = '0.9rem';
+        metaEl1.textContent = ` ${sc.points} pts · ${sc.wrong} ✖`;
+ 
         const btn1 = document.createElement('button');
         btn1.className = 'blacklist-btn';
         btn1.textContent = blacklistedStudents.includes(student) ? 'Débloquer' : 'Bloquer';
         btn1.onclick = () => toggleBlacklist(student);
 
         item1.appendChild(nameEl1);
+        item1.appendChild(metaEl1);
         item1.appendChild(btn1);
         listEl.appendChild(item1);
 
@@ -274,12 +315,19 @@ function renderStudentList() {
         nameEl2.className = 'student-name';
         nameEl2.textContent = `${student} (${studentSelectionCount[student] || 0})`;
 
+        // const metaEl2 = document.createElement('span');
+        // metaEl2.className = 'student-meta';
+        // metaEl2.style.marginLeft = '8px';
+        // metaEl2.style.color = '#667';
+        // metaEl2.style.fontSize = '0.9rem';
+        // metaEl2.textContent = ` ${sc.points} pts · ${sc.wrong} ✖`;
         const btn2 = document.createElement('button');
         btn2.className = 'blacklist-btn';
         btn2.textContent = blacklistedStudents.includes(student) ? 'Débloquer' : 'Bloquer';
         btn2.onclick = () => toggleBlacklist(student);
 
         item2.appendChild(nameEl2);
+        // item2.appendChild(metaEl2);
         item2.appendChild(btn2);
         listEl2.appendChild(item2);
     });
@@ -361,6 +409,10 @@ function selectStudent() {
 }
 
 async function performSelection() {
+    if (!sessionActive) {
+        startSession();
+    }
+    
     const btn = document.getElementById('selectButton');
     btn.disabled = true;
 
@@ -369,6 +421,8 @@ async function performSelection() {
         btn.disabled = false;
         return;
     }
+
+    currentSelected = selected;
 
     if (tickInterval) {
         clearInterval(tickInterval);
@@ -414,6 +468,7 @@ async function performSelection() {
         area.innerHTML = `<div class="selected-student">${selected}</div>`;
         btn.disabled = false;
         updateUI();
+        enableMarkButtons(true);
     }
 }
 
@@ -459,6 +514,16 @@ function updateUI() {
     updateHistory();
     renderStudentList();
     updateStats();
+    enableMarkButtons(!!currentSelected && sessionActive);
+}
+
+function enableMarkButtons(enabled) {
+    const correctBtn = document.getElementById('markCorrectBtn');
+    const wrongBtn = document.getElementById('markWrongBtn');
+    const endBtn = document.getElementById('endSessionBtn');
+    if (correctBtn) correctBtn.disabled = !enabled;
+    if (wrongBtn) wrongBtn.disabled = !enabled;
+    if (endBtn) endBtn.disabled = !sessionActive;
 }
 
 function updateHistory() {
@@ -496,6 +561,112 @@ function resetSession() {
     area.innerHTML = '<div class="placeholder-text">Cliquez sur "Sélectionner" pour commencer</div>';
     
     updateUI();
+}
+
+// ===== Session / scoring functions =====
+function startSession() {
+    resetSession();
+    sessionActive = true;
+    sessionScores = {};
+    students.forEach(s => sessionScores[s] = { correct: 0, wrong: 0, points: 0 });
+    currentSelected = null;
+    enableMarkButtons(false);
+    document.getElementById('startSessionBtn').disabled = true;
+    document.getElementById('endSessionBtn').disabled = false;
+    updateUI();
+}
+
+function endSession() {
+    sessionActive = false;
+    // disable marking
+    currentSelected = null;
+    enableMarkButtons(false);
+    document.getElementById('startSessionBtn').disabled = false;
+    document.getElementById('endSessionBtn').disabled = true;
+    showPodiumModal();
+}
+
+function markCorrect() {
+    if (!sessionActive || !currentSelected) {
+        alert('Démarrez une session et sélectionnez un étudiant avant de marquer.');
+        return;
+    }
+    const s = sessionScores[currentSelected] || { correct: 0, wrong: 0, points: 0 };
+    s.correct++;
+    s.points++;
+    sessionScores[currentSelected] = s;
+    currentSelected = null;
+    enableMarkButtons(false);
+    updateUI();
+}
+
+function markWrong() {
+    if (!sessionActive || !currentSelected) {
+        alert('Démarrez une session et sélectionnez un étudiant avant de marquer.');
+        return;
+    }
+    const s = sessionScores[currentSelected] || { correct: 0, wrong: 0, points: 0 };
+    s.wrong++;
+    s.points = s.points > 0 ? s.points - 1 : s.points - 1;
+    sessionScores[currentSelected] = s;
+    currentSelected = null;
+    enableMarkButtons(false);
+    updateUI();
+}
+
+function showPodiumModal() {
+    const modal = document.getElementById('podiumModal');
+    const content = document.getElementById('podiumContent');
+    if (!modal || !content) return;
+
+    // Build sorted list
+    const list = Object.keys(sessionScores);
+    list.sort((a, b) => {
+        const sa = sessionScores[a];
+        const sb = sessionScores[b];
+        if (sa.points !== sb.points) return sb.points - sa.points;
+        if (sa.wrong !== sb.wrong) return sa.wrong - sb.wrong;
+        return a.localeCompare(b, 'fr');
+    });
+
+    const top3 = list.slice(0, 3);
+    const others = list.slice(3);
+
+    let html = '<div class="podium">';
+    html += '<div class="podium-top">';
+    // show top3 (if fewer, show what's available)
+    const sizes = [1, 2, 1]; // visual sizes (center taller)
+    top3.forEach((name, idx) => {
+        const s = sessionScores[name];
+        const place = idx + 1;
+        html += `<div class="podium-slot" style="transform: translateY(${(1 - idx) * -6}px);">
+                    <div class="place">#${place}</div>
+                    <div class="name">${name}</div>
+                    <div class="score">${s.points} pts · ${s.wrong} ✖</div>
+                 </div>`;
+    });
+    html += '</div>'; // podium-top
+
+    if (others.length > 0) {
+        html += '<div class="podium-list">';
+        others.forEach((name, idx) => {
+            const s = sessionScores[name];
+            html += `<div class="row"><div>${idx + 4}. ${name}</div><div>${s.points} pts · ${s.wrong} ✖</div></div>`;
+        });
+        html += '</div>';
+    }
+
+    html += '</div>';
+    content.innerHTML = html;
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function hidePodiumModal() {
+    const modal = document.getElementById('podiumModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
 }
 
 function undoLast() {

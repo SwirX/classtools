@@ -19,11 +19,6 @@
 
         <!-- Navigation Menu -->
         <nav class="nav-buttons" id="toolsMenu">
-            <!-- navigate to root index -->
-            <!-- <button class="nav-btn" onclick="window.location.href='/IA103'">
-                <i class="fas fa-home"></i>
-                Accueil
-            </button> -->
             <button class="nav-btn active" data-page="selector"><i class="fas fa-random"></i> Sélecteur</button>
             <button class="nav-btn" data-page="students"><i class="fas fa-random"></i> Étudiants</button>
             <button class="nav-btn" data-page="timer"><i class="fas fa-stopwatch"></i>Minuteur</button>
@@ -74,11 +69,31 @@
                             <span>Sélectionner un Étudiant</span>
                         </button>
 
+                        <div class="session-controls" style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+                            <button id="startSessionBtn" class="action-btn">Démarrer session</button>
+                            <button id="endSessionBtn" class="action-btn" disabled>Terminer session</button>
+                            <div style="flex:1"></div>
+                            <button id="markCorrectBtn" class="action-btn" disabled>Correct <i class="fas fa-check"></i></button>
+                            <button id="markWrongBtn" class="action-btn" disabled>Faux <i class="fas fa-x"></i></button>
+                        </div>
+
                         <div class="action-buttons">
                             <button class="action-btn" id="resetBtn"><i class="fas fa-repeat"></i> Réinitialiser</button>
                             <button class="action-btn" id="undoBtn"><i class="fas fa-x"></i> Annuler</button>
                         </div>
                     </div>
+
+                    <div id="podiumModal" class="modal" aria-hidden="true" role="dialog" style="display:none;">
+                    <div class="modal-backdrop"></div>
+                    <div class="modal-panel" role="document" aria-label="Résultats de la session">
+                        <h3>Résultats de la session</h3>
+                        <div id="podiumContent" style="margin-top:12px;"></div>
+                        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+                            <button id="podiumCloseBtn" class="action-btn">Fermer</button>
+                            <button id="podiumNewSessionBtn" class="select-btn">Nouvelle session</button>
+                        </div>
+                    </div>
+                </div>
 
                     <div class="history-section">
                         <div class="control-label"><i class="fas fa-history"></i> Sélections Récentes</div>

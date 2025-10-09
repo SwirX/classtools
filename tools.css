@@ -481,3 +481,49 @@ kbd {
     color: #555;
     font-size: 0.95rem;
 }
+.podium {
+    display: grid;
+    gap: 12px;
+}
+.podium-top {
+    display:flex;
+    gap:12px;
+    align-items: end;
+    justify-content: center;
+}
+.podium-slot {
+    background: linear-gradient(180deg,#fff,#f1f5f9);
+    border-radius:8px;
+    padding:10px;
+    text-align:center;
+    min-width:120px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+.podium-slot .place {
+    font-weight:700;
+    color:#667eea;
+}
+.podium-slot .name {
+    margin-top:8px;
+    font-size:1.05rem;
+    font-weight:700;
+}
+.podium-slot .score {
+    margin-top:6px;
+    color:#333;
+    font-size:0.95rem;
+}
+.podium-list {
+    margin-top:8px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+.podium-list .row {
+    display:flex;
+    justify-content:space-between;
+    padding:8px 12px;
+    border-radius:8px;
+    background:#fff;
+    border:1px solid #eef2f7;
+}
