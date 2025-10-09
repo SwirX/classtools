@@ -1,10 +1,13 @@
 // ============= GLOBAL STATE =============
-const students = [
+let students = [
     "Imane", "Youssef", "Mohamed", "Ali", "Deyae",
     "Youssef-FK", "Salma", "Yasmin", "Hanane",
     "Meryem", "Maryam", "Fatimzahra", "Wafaa", "Ayoub",
-    "Samah", "Saifdine", "Hamza", "Barbra", "Msanide" 
+    "Samah", "Saifdine", "Hamza", "Barbra", "Msanide"
 ];
+
+let profiles = {};
+let lastProfileName = null;
 
 let currentMode = 'normal';
 let animationEnabled = true;
@@ -34,6 +37,73 @@ function init() {
     setupTimer();
     setupGroups();
     initAudio();
+
+    loadProfilesFromCookie();
+    populateProfileSelector();
+    setupStudentProfilesUI();
+
+    // If a last profile was saved, apply it
+    if (lastProfileName && profiles[lastProfileName]) {
+        applyProfile(lastProfileName);
+    } else {
+        // ensure UI uses current default list
+        renderStudentList();
+        updateStats();
+    }
+    // Setup modal buttons
+    const importCancelBtn = document.getElementById('importCancelBtn');
+    const importConfirmBtn = document.getElementById('importConfirmBtn');
+    if (importCancelBtn) importCancelBtn.addEventListener('click', hideImportModal);
+    if (importConfirmBtn) importConfirmBtn.addEventListener('click', handleImportConfirm);
+}
+
+
+// ============= COOKIE / PROFILE HELPERS =============
+function setCookie(name, value, days = 365) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+}
+
+function getCookie(name) {
+    return document.cookie.split('; ').reduce((r, v) => {
+        const parts = v.split('=');
+        return parts[0] === name ? decodeURIComponent(parts.slice(1).join('=')) : r;
+    }, '');
+}
+
+function loadProfilesFromCookie() {
+    const raw = getCookie('classtools_groups') || '';
+    if (raw) {
+        try {
+            profiles = JSON.parse(raw);
+        } catch (e) {
+            console.warn('Failed to parse groups cookie, resetting.', e);
+            profiles = {};
+        }
+    } else {
+        profiles = {};
+    }
+
+    const last = getCookie('classtools_lastGroup') || '';
+    lastProfileName = last || null;
+
+    // If none stored, create default group IA103 from current students
+    if (Object.keys(profiles).length === 0) {
+        profiles['IA103'] = [...students];
+        lastProfileName = 'IA103';
+        saveProfilesToCookie();
+    }
+}
+
+function saveProfilesToCookie() {
+    try {
+        setCookie('classtools_groups', JSON.stringify(profiles), 365);
+    } catch (e) {
+        console.warn('Failed to save groups to cookie', e);
+    }
+    if (lastProfileName) {
+        setCookie('classtools_lastGroup', lastProfileName, 365);
+    }
 }
 
 // ============= NAVIGATION =============
@@ -164,32 +234,54 @@ function setupSelector() {
 
 function renderStudentList() {
     const listEl = document.getElementById('studentList');
+    const listEl2 = document.getElementById('studentsList');
+    if (!listEl || !listEl2) return;
     listEl.innerHTML = '';
-    
+    listEl2.innerHTML = '';
+
     students.forEach(student => {
-        const item = document.createElement('div');
-        item.className = 'student-item';
-        
+        const item1 = document.createElement('div');
+        item1.className = 'student-item';
+
         if (blacklistedStudents.includes(student)) {
-            item.classList.add('blacklisted');
+            item1.classList.add('blacklisted');
         }
-        
+
         if (eliminatedStudents.includes(student)) {
-            item.classList.add('selected');
+            item1.classList.add('selected');
         }
 
-        const nameEl = document.createElement('span');
-        nameEl.className = 'student-name';
-        nameEl.textContent = `${student} (${studentSelectionCount[student]})`;
+        const nameEl1 = document.createElement('span');
+        nameEl1.className = 'student-name';
+        nameEl1.textContent = `${student} (${studentSelectionCount[student] || 0})`;
 
-        const btn = document.createElement('button');
-        btn.className = 'blacklist-btn';
-        btn.textContent = blacklistedStudents.includes(student) ? 'Débloquer' : 'Bloquer';
-        btn.onclick = () => toggleBlacklist(student);
+        const btn1 = document.createElement('button');
+        btn1.className = 'blacklist-btn';
+        btn1.textContent = blacklistedStudents.includes(student) ? 'Débloquer' : 'Bloquer';
+        btn1.onclick = () => toggleBlacklist(student);
 
-        item.appendChild(nameEl);
-        item.appendChild(btn);
-        listEl.appendChild(item);
+        item1.appendChild(nameEl1);
+        item1.appendChild(btn1);
+        listEl.appendChild(item1);
+
+        // Create a separate node for the second list (avoid moving nodes)
+        const item2 = document.createElement('div');
+        item2.className = 'student-item';
+        if (blacklistedStudents.includes(student)) item2.classList.add('blacklisted');
+        if (eliminatedStudents.includes(student)) item2.classList.add('selected');
+
+        const nameEl2 = document.createElement('span');
+        nameEl2.className = 'student-name';
+        nameEl2.textContent = `${student} (${studentSelectionCount[student] || 0})`;
+
+        const btn2 = document.createElement('button');
+        btn2.className = 'blacklist-btn';
+        btn2.textContent = blacklistedStudents.includes(student) ? 'Débloquer' : 'Bloquer';
+        btn2.onclick = () => toggleBlacklist(student);
+
+        item2.appendChild(nameEl2);
+        item2.appendChild(btn2);
+        listEl2.appendChild(item2);
     });
 }
 
@@ -425,6 +517,145 @@ function undoLast() {
     area.innerHTML = '<div class="placeholder-text">Cliquez sur "Sélectionner" pour commencer</div>';
 
     updateUI();
+}
+
+// ============= STUDENT PROFILES UI =============
+function populateProfileSelector() {
+    const sel = document.getElementById('studentProfiles');
+    if (!sel) return;
+
+    sel.innerHTML = '';
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.textContent = '-- Groupes --';
+    sel.appendChild(emptyOpt);
+
+    Object.keys(profiles).forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name + ` (${profiles[name].length})`;
+        sel.appendChild(opt);
+    });
+
+    if (lastProfileName) {
+        sel.value = lastProfileName;
+    } else {
+        sel.value = '';
+    }
+}
+
+function setupStudentProfilesUI() {
+    const newBtn = document.getElementById('newProfileBtn');
+    const delBtn = document.getElementById('deleteProfileBtn');
+    const sel = document.getElementById('studentProfiles');
+
+    if (newBtn) newBtn.addEventListener('click', showImportModal);
+    if (delBtn) delBtn.addEventListener('click', () => {
+        const selected = sel.value;
+        if (!selected) {
+            alert('Veuillez sélectionner un groupe à supprimer.');
+            return;
+        }
+        if (!confirm(`Supprimer le groupe "${selected}" ?`)) return;
+        delete profiles[selected];
+        if (lastProfileName === selected) lastProfileName = null;
+        saveProfilesToCookie();
+        populateProfileSelector();
+    });
+
+    if (sel) sel.addEventListener('change', (e) => {
+        const name = e.target.value;
+        if (!name) return;
+        applyProfile(name);
+    });
+}
+
+function showImportModal() {
+    const modal = document.getElementById('importModal');
+    if (!modal) return;
+    document.getElementById('importText').value = '';
+    document.getElementById('importGroupName').value = 'IA103';
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function hideImportModal() {
+    const modal = document.getElementById('importModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+
+function handleImportConfirm() {
+    const raw = document.getElementById('importText').value;
+    const nameInput = document.getElementById('importGroupName').value || '';
+    let profileName = nameInput.trim();
+    if (!profileName) {
+        alert('Nom du groupe invalide.');
+        return;
+    }
+
+    let parsed = [];
+    try {
+        const trimmed = raw.trim();
+        if (!trimmed) {
+            alert('Aucune donnée fournie.');
+            return;
+        }
+
+        if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+            // try JSON
+            const obj = JSON.parse(trimmed);
+            if (Array.isArray(obj)) {
+                parsed = obj.map(s => String(s).trim()).filter(Boolean);
+            } else if (obj && Array.isArray(obj.students)) {
+                parsed = obj.students.map(s => String(s).trim()).filter(Boolean);
+            } else {
+                alert('JSON non reconnu. Utilisez un tableau ou { "students": [...] }');
+                return;
+            }
+        } else {
+            // plain text, split lines
+            parsed = trimmed.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        }
+    } catch (e) {
+        alert('Erreur en analysant l\'entrée: ' + e.message);
+        return;
+    }
+
+    if (parsed.length === 0) {
+        alert('Aucun étudiant valide trouvé.');
+        return;
+    }
+
+    // Save group and apply
+    profiles[profileName] = parsed;
+    lastProfileName = profileName;
+    saveProfilesToCookie();
+    populateProfileSelector();
+    applyProfile(profileName);
+
+    hideImportModal();
+}
+
+function applyProfile(name) {
+    if (!profiles[name]) return;
+    students = [...profiles[name]];
+    lastProfileName = name;
+
+    // reset counters & state for new students
+    studentSelectionCount = {};
+    selectionHistory = [];
+    eliminatedStudents = [];
+    blacklistedStudents = [];
+    totalSelections = 0;
+    students.forEach(s => studentSelectionCount[s] = 0);
+
+    // update UI
+    renderStudentList();
+    updateUI();
+    saveProfilesToCookie();
 }
 
 // ============= TIMER FUNCTIONS =============

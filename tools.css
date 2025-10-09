@@ -445,3 +445,39 @@ kbd {
         font-size: 2rem;
     }
 }
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+}
+
+.modal-panel {
+    position: relative;
+    background: #fff;
+    border-radius: 10px;
+    padding: 18px;
+    width: 90%;
+    max-width: 720px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.modal-panel h3 {
+    margin: 0 0 8px 0;
+    color: #333;
+}
+
+.modal-panel p {
+    margin: 0 0 12px 0;
+    color: #555;
+    font-size: 0.95rem;
+}

@@ -25,6 +25,7 @@
                 Accueil
             </button> -->
             <button class="nav-btn active" data-page="selector"><i class="fas fa-random"></i> Sélecteur</button>
+            <button class="nav-btn" data-page="students"><i class="fas fa-random"></i> Étudiants</button>
             <button class="nav-btn" data-page="timer"><i class="fas fa-stopwatch"></i>Minuteur</button>
             <button class="nav-btn" data-page="groups"><i class="fas fa-users"></i>Groupes</button>
             <button class="nav-btn" data-page="help"><i class="fas fa-question"></i>Aide</button>
@@ -104,6 +105,36 @@
                 </div>
             </div>
         </div>
+
+        <div class="page-content" id="studentsPage">
+            <div class="card students-card">
+                <div class="card-title"><i class="fas fa-users"></i>Liste d'étudiants</div>
+                <div class="student-list" id="studentsList"></div>
+                <br>
+                <div class="students-control">
+                    <select id="studentProfiles" aria-label="Groupes d'étudiants"></select>
+                    <button class="action-btn" id="newProfileBtn">Importer</button>
+                    <button class="action-btn" id="deleteProfileBtn">Supprimer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="importModal" class="modal" aria-hidden="true" role="dialog" style="display:none;">
+            <div class="modal-backdrop"></div>
+            <div class="modal-panel" role="document" aria-label="Importer des étudiants">
+                <h3>Importer des étudiants</h3>
+                <p>Collez un tableau JSON (ex: ["Alice","Bob"]) ou un texte brut (une ligne = un étudiant).</p>
+                <textarea id="importText" placeholder="Collez ici..." rows="8" style="width:100%;"></textarea>
+                <div style="margin-top:8px;">
+                    <label for="importGroupName">Nom du groupe</label>
+                    <input id="importGroupName" type="text" value="IA103" style="width:100%; padding:8px; margin-top:4px;">
+                </div>
+                <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+                    <button id="importCancelBtn" class="action-btn">Annuler</button>
+                    <button id="importConfirmBtn" class="select-btn">Importer</button>
+                </div>
+            </div>
+    </div>
 
         <!-- Timer Page -->
         <div class="page-content" id="timerPage">
@@ -293,7 +324,7 @@
 
         <div class="footer">
             Made with ❤️ by <a href="https://alibks.vercel.app" target="_blank" rel="noopener">Ali Bouyakhsass</a> | 
-            <a href="https://github.com/SwirX/IA103" target="_blank" rel="noopener">GitHub: IA103</a>
+            <a href="https://github.com/SwirX/classtools" target="_blank" rel="noopener">GitHub: ClassTools</a>
         </div>
     </div>
 
